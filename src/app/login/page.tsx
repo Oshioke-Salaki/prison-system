@@ -39,8 +39,8 @@ export default function LoginPage() {
         .single();
 
       if (profileError && profileError.code !== 'PGRST116') {
-          // If profile doesn't exist, assume inmate or handle error
-          console.error("Profile error", profileError);
+        // If profile doesn't exist, assume inmate or handle error
+        console.error("Profile error", profileError);
       }
 
       const role = profile?.role || 'inmate';
@@ -62,13 +62,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-        {/* Ambient Background */}
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-             <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px]"></div>
-             <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[120px]"></div>
-        </div>
+      {/* Ambient Background */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[120px]"></div>
+      </div>
 
-      <MotionDiv 
+      <MotionDiv
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
@@ -80,7 +80,7 @@ export default function LoginPage() {
               <Shield className="w-8 h-8 text-primary" />
             </div>
           </div>
-          
+
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold tracking-tight mb-2">Welcome Back</h1>
             <p className="text-muted-foreground">Secure access to the Sentinell System</p>
@@ -99,7 +99,7 @@ export default function LoginPage() {
                   required
                 />
               </div>
-              
+
               <div className="relative group">
                 <Lock className="absolute left-3 top-3 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <input
@@ -114,7 +114,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <MotionDiv 
+              <MotionDiv
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center font-medium"
@@ -131,10 +131,10 @@ export default function LoginPage() {
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign In"}
             </button>
           </form>
-          
+
           <div className="mt-8 text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account? <span className="text-primary cursor-pointer hover:underline">Contact Administrator</span>
+              Don't have an account?? <span className="text-primary cursor-pointer hover:underline">Contact Administrator</span>
             </p>
           </div>
         </div>
