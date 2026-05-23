@@ -33,12 +33,12 @@ export default function LoginPage() {
 
       // Fetch user profile to determine role
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+        .from('staff')
         .select('role')
-        .eq('id', data.user.id)
+        .eq('profile_id', data.user.id)
         .single();
 
-      if (profileError) {
+      if (profileError && profileError.code !== 'PGRST116') {
           // If profile doesn't exist, assume inmate or handle error
           console.error("Profile error", profileError);
       }
