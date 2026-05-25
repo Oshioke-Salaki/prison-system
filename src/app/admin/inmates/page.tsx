@@ -188,18 +188,20 @@ export default function InmatesPage() {
 
                                     {activeActionId === inmate.id && (
                                         <div className="absolute right-8 top-0 mt-2 w-40 bg-[#1E1E24] border border-white/10 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                                            <div className="py-1 border-b border-white/10">
-                                                <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase">Update Status</div>
-                                                <button onClick={(e) => { e.stopPropagation(); updateInmateStatus(inmate.id, 'active'); }} className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-white/5 flex items-center gap-2 text-green-400">
-                                                    Active
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); updateInmateStatus(inmate.id, 'solitary'); }} className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-white/5 flex items-center gap-2 text-orange-400">
-                                                    Solitary
-                                                </button>
-                                                <button onClick={(e) => { e.stopPropagation(); updateInmateStatus(inmate.id, 'released'); }} className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-white/5 flex items-center gap-2 text-blue-400">
-                                                    Released
-                                                </button>
-                                            </div>
+                                            {inmate.status !== 'released' && (
+                                                <div className="py-1 border-b border-white/10">
+                                                    <div className="px-4 py-2 text-xs font-semibold text-muted-foreground uppercase">Update Status</div>
+                                                    <button onClick={(e) => { e.stopPropagation(); updateInmateStatus(inmate.id, 'active'); }} className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-white/5 flex items-center gap-2 text-green-400">
+                                                        Active
+                                                    </button>
+                                                    <button onClick={(e) => { e.stopPropagation(); updateInmateStatus(inmate.id, 'solitary'); }} className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-white/5 flex items-center gap-2 text-orange-400">
+                                                        Solitary
+                                                    </button>
+                                                    <button onClick={(e) => { e.stopPropagation(); updateInmateStatus(inmate.id, 'released'); }} className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-white/5 flex items-center gap-2 text-blue-400">
+                                                        Released
+                                                    </button>
+                                                </div>
+                                            )}
                                             <div className="py-1">
                                                 <Link href={`/admin/inmates/edit/${inmate.id}`} className="w-full px-4 py-2 text-left text-xs font-medium hover:bg-white/5 flex items-center gap-2">
                                                     <Edit className="w-3 h-3" /> Edit Profile

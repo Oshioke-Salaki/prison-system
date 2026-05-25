@@ -101,12 +101,13 @@ export default function NewInmatePage() {
         if (error) throw error;
 
         if (sanitizedData.cell_id) {
-            await supabase.rpc('increment_cell_occupancy', { row_id: sanitizedData.cell_id }).catch(async () => {
+            const { error: rpcError } = await supabase.rpc('increment_cell_occupancy', { row_id: sanitizedData.cell_id });
+            if (rpcError) {
                 const { data: c } = await supabase.from('cells').select('current_occupancy').eq('id', sanitizedData.cell_id).single();
                 if (c) {
                     await supabase.from('cells').update({ current_occupancy: c.current_occupancy + 1 }).eq('id', sanitizedData.cell_id);
                 }
-            });
+            }
         }
 
         alert(`Inmate successfully registered!\nLogin Email: ${email}\nDefault Password: ${defaultPassword}`);
