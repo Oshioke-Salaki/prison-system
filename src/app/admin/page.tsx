@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { Users, FileText, AlertCircle, DollarSign, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
-import { Link } from 'next/link';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
