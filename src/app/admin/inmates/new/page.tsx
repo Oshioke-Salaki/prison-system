@@ -51,6 +51,8 @@ export default function NewInmatePage() {
 
     // Auto-generate Inmate ID (Simple random 6 digit)
     const inmate_number = Math.floor(100000 + Math.random() * 900000).toString();
+    const defaultPassword = '1234';
+    const email = `${inmate_number}@sentinell.inmate`;
 
     const sanitizedData = {
         first_name: formData.first_name,
@@ -65,10 +67,49 @@ export default function NewInmatePage() {
     };
 
     try {
+        if (sanitizedData.cell_id) {
+            // Strict check
+            const { data: cell } = await supabase.from('cells').select('capacity, current_occupancy').eq('id', sanitizedData.cell_id).single();
+            if (cell && cell.current_occupancy >= cell.capacity) {
+                alert("Error: The selected cell is already at maximum capacity.");
+                setLoading(false);
+                return;
+            }
+        }
+
+        // 1. Create Auth User via API route
+        const res = await fetch('/api/auth/create-user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                email, 
+                password: defaultPassword, 
+                role: 'inmate', 
+                firstName: sanitizedData.first_name, 
+                lastName: sanitizedData.last_name 
+            })
+        });
+        
+        const authData = await res.json();
+        if (!res.ok) throw new Error(authData.error);
+
+        sanitizedData.profile_id = authData.user.id;
+
+        // 2. Insert inmate record
         const { error } = await supabase.from('inmates').insert([sanitizedData]);
 
         if (error) throw error;
 
+        if (sanitizedData.cell_id) {
+            await supabase.rpc('increment_cell_occupancy', { row_id: sanitizedData.cell_id }).catch(async () => {
+                const { data: c } = await supabase.from('cells').select('current_occupancy').eq('id', sanitizedData.cell_id).single();
+                if (c) {
+                    await supabase.from('cells').update({ current_occupancy: c.current_occupancy + 1 }).eq('id', sanitizedData.cell_id);
+                }
+            });
+        }
+
+        alert(`Inmate successfully registered!\nLogin Email: ${email}\nDefault Password: ${defaultPassword}`);
         router.push('/admin/inmates');
         router.refresh(); 
     } catch (err: any) {

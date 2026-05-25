@@ -14,6 +14,8 @@ const MotionDiv = React.memo((props: any) => {
   return <motion.div {...props} />;
 });
 
+import { AlertCircle, Calendar } from 'lucide-react';
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -31,6 +33,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { icon: Shield, label: 'Staff', href: '/admin/staff' },
     { icon: FileText, label: 'Requests', href: '/admin/requests' },
     { icon: Box, label: 'Inventory', href: '/admin/inventory' },
+    { icon: AlertCircle, label: 'Incidents', href: '/admin/incidents' },
+    { icon: Calendar, label: 'Visits', href: '/admin/visits' },
     { icon: Settings, label: 'Settings', href: '/admin/settings' },
   ];
 

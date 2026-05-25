@@ -19,7 +19,7 @@ export default function StaffPage() {
   const fetchProfiles = async () => {
       try {
           const { data, error } = await supabase
-              .from('profiles')
+              .from('staff')
               .select('*')
               .order('created_at', { ascending: false });
           
@@ -35,7 +35,7 @@ export default function StaffPage() {
   const updateRole = async (id: string, newRole: string) => {
       setSaving(id);
       try {
-          const { error } = await supabase.from('profiles').update({ role: newRole }).eq('id', id);
+          const { error } = await supabase.from('staff').update({ role: newRole }).eq('id', id);
           if (error) throw error;
           
           setProfiles(profiles.map(p => p.id === id ? { ...p, role: newRole } : p));
@@ -47,17 +47,72 @@ export default function StaffPage() {
       }
   };
 
-  const filteredProfiles = profiles.filter(profile => 
-      profile.email?.toLowerCase().includes(search.toLowerCase()) ||
-      profile.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-      profile.role?.toLowerCase().includes(search.toLowerCase())
-  );
+  const [showModal, setShowModal] = useState(false);
+  const [newStaff, setNewStaff] = useState({ firstName: '', lastName: '', role: 'officer', password: 'Password123!' });
+  const [creating, setCreating] = useState(false);
+
+  const filteredProfiles = profiles.filter(profile => {
+      const name = `${profile.first_name} ${profile.last_name}`.toLowerCase();
+      return name.includes(search.toLowerCase()) || profile.role?.toLowerCase().includes(search.toLowerCase());
+  });
+
+  const handleCreateStaff = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setCreating(true);
+
+      try {
+          const email = `${newStaff.firstName.toLowerCase()}.${newStaff.lastName.toLowerCase()}@sentinell.app`;
+          
+          // 1. Create Auth User via API route
+          const res = await fetch('/api/auth/create-user', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                  email, 
+                  password: newStaff.password, 
+                  role: newStaff.role, 
+                  firstName: newStaff.firstName, 
+                  lastName: newStaff.lastName 
+              })
+          });
+          
+          const authData = await res.json();
+          if (!res.ok) throw new Error(authData.error);
+
+          // 2. Create Staff record
+          const { error } = await supabase.from('staff').insert([{
+              first_name: newStaff.firstName,
+              last_name: newStaff.lastName,
+              role: newStaff.role,
+              profile_id: authData.user.id
+          }]);
+
+          if (error) throw error;
+
+          alert(`Staff created successfully! Email: ${email}, Password: ${newStaff.password}`);
+          setShowModal(false);
+          setNewStaff({ firstName: '', lastName: '', role: 'officer', password: 'Password123!' });
+          fetchProfiles();
+      } catch (error: any) {
+          alert(`Error creating staff: ${error.message}`);
+      } finally {
+          setCreating(false);
+      }
+  };
 
   return (
     <div className="space-y-6">
         <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Staff & User Management</h1>
-            <p className="text-muted-foreground text-sm">Manage user roles and access permissions.</p>
+            <div>
+                <h1 className="text-2xl font-bold">Staff & User Management</h1>
+                <p className="text-muted-foreground text-sm">Manage user roles and access permissions.</p>
+            </div>
+            <button 
+                onClick={() => setShowModal(true)}
+                className="px-4 py-2 bg-primary text-white rounded-xl font-medium flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+                Add Staff
+            </button>
         </div>
 
         <div className="relative max-w-md">
@@ -66,7 +121,7 @@ export default function StaffPage() {
                 type="text" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search users..." 
+                placeholder="Search staff..." 
                 className="pl-9 pr-4 py-2.5 bg-card border border-white/10 rounded-xl text-sm w-full focus:outline-none focus:border-primary/50 transition-colors" 
             />
         </div>
@@ -90,7 +145,7 @@ export default function StaffPage() {
                     {filteredProfiles.length === 0 ? (
                         <tr>
                             <td colSpan={4} className="px-6 py-12 text-center text-muted-foreground">
-                                No users found.
+                                No staff found.
                             </td>
                         </tr>
                     ) : (
@@ -102,9 +157,9 @@ export default function StaffPage() {
                                             <UserCog className="w-5 h-5 text-muted-foreground" />
                                         </div>
                                         <div>
-                                            <div className="font-medium text-white">{profile.full_name || 'Unknown Name'}</div>
+                                            <div className="font-medium text-white">{profile.first_name} {profile.last_name}</div>
                                             <div className="text-xs text-muted-foreground flex items-center gap-1">
-                                                <Mail className="w-3 h-3" /> {profile.email}
+                                                <Mail className="w-3 h-3" /> {profile.first_name?.toLowerCase()}.{profile.last_name?.toLowerCase()}@sentinell.app
                                             </div>
                                         </div>
                                     </div>
@@ -141,6 +196,48 @@ export default function StaffPage() {
             </table>
             )}
         </div>
+
+        {/* Add Staff Modal */}
+        {showModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                <div className="bg-background border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl">
+                    <div className="p-6 border-b border-white/10 flex items-center gap-3">
+                        <Shield className="w-5 h-5 text-primary" />
+                        <h2 className="text-xl font-bold">Add New Staff</h2>
+                    </div>
+                    <form onSubmit={handleCreateStaff} className="p-6 space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-muted-foreground uppercase">First Name</label>
+                                <input required value={newStaff.firstName} onChange={(e) => setNewStaff({...newStaff, firstName: e.target.value})} className="w-full bg-card border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-primary/50 outline-none" />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-bold text-muted-foreground uppercase">Last Name</label>
+                                <input required value={newStaff.lastName} onChange={(e) => setNewStaff({...newStaff, lastName: e.target.value})} className="w-full bg-card border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-primary/50 outline-none" />
+                            </div>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-muted-foreground uppercase">Role</label>
+                            <select required value={newStaff.role} onChange={(e) => setNewStaff({...newStaff, role: e.target.value})} className="w-full bg-card border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-primary/50 outline-none">
+                                <option value="officer">Officer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-bold text-muted-foreground uppercase">Default Password</label>
+                            <input required value={newStaff.password} onChange={(e) => setNewStaff({...newStaff, password: e.target.value})} className="w-full bg-card border border-white/10 rounded-lg px-3 py-2 text-sm focus:border-primary/50 outline-none" />
+                        </div>
+                        <div className="flex items-center gap-3 pt-4 mt-2">
+                            <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 transition-colors font-medium">Cancel</button>
+                            <button type="submit" disabled={creating} className="flex-1 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors font-bold flex items-center justify-center gap-2">
+                                {creating && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Create Staff
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        )}
     </div>
   );
 }

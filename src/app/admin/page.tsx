@@ -130,32 +130,35 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Inmate Status Breakdown - Table */}
-                  <div className="bg-white/5 rounded-xl border border-white/5 overflow-hidden">
-                      <table className="w-full text-sm">
-                          <thead className="bg-white/5 text-xs text-muted-foreground uppercase font-semibold text-left">
-                              <tr>
-                                  <th className="px-4 py-3">Status</th>
-                                  <th className="px-4 py-3 text-right">Count</th>
-                                  <th className="px-4 py-3 text-right">%</th>
-                              </tr>
-                          </thead>
-                          <tbody className="divide-y divide-white/5">
-                              {[
-                                  { label: 'Active', count: stats.statusCounts.active, color: 'text-green-400' },
-                                  { label: 'Solitary', count: stats.statusCounts.solitary, color: 'text-red-400' },
-                                  { label: 'Released', count: stats.statusCounts.released, color: 'text-blue-400' }
-                              ].map(item => (
-                                  <tr key={item.label} className="hover:bg-white/5 transition-colors">
-                                      <td className={`px-4 py-3 font-medium ${item.color}`}>{item.label}</td>
-                                      <td className="px-4 py-3 text-right font-mono">{item.count}</td>
-                                      <td className="px-4 py-3 text-right text-muted-foreground text-xs">
-                                          {stats.totalInmates > 0 ? Math.round((item.count / stats.totalInmates) * 100) : 0}%
-                                      </td>
-                                  </tr>
-                              ))}
-                          </tbody>
-                      </table>
+                  {/* Inmate Status Breakdown - Enlarged Visual Bar Chart */}
+                  <div className="bg-white/5 rounded-2xl border border-white/5 p-6 h-full flex flex-col justify-center">
+                      <h4 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-6">Population Status</h4>
+                      <div className="space-y-6">
+                          {[
+                              { label: 'Active', count: stats.statusCounts.active, color: 'bg-green-500', text: 'text-green-400' },
+                              { label: 'Solitary', count: stats.statusCounts.solitary, color: 'bg-red-500', text: 'text-red-400' },
+                              { label: 'Released', count: stats.statusCounts.released, color: 'bg-blue-500', text: 'text-blue-400' }
+                          ].map(item => {
+                              const percentage = stats.totalInmates > 0 ? Math.round((item.count / stats.totalInmates) * 100) : 0;
+                              return (
+                                  <div key={item.label}>
+                                      <div className="flex justify-between items-end mb-2">
+                                          <span className={`font-bold ${item.text}`}>{item.label}</span>
+                                          <div className="text-right">
+                                              <span className="font-bold text-lg">{item.count}</span>
+                                              <span className="text-xs text-muted-foreground ml-2">({percentage}%)</span>
+                                          </div>
+                                      </div>
+                                      <div className="w-full bg-[#1E1E24] rounded-full h-4 overflow-hidden border border-white/5">
+                                          <div 
+                                              className={`h-full ${item.color} rounded-full transition-all duration-1000 ease-out`}
+                                              style={{ width: `${percentage}%` }}
+                                          ></div>
+                                      </div>
+                                  </div>
+                              );
+                          })}
+                      </div>
                   </div>
               </div>
           </div>

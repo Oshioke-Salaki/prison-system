@@ -31,14 +31,37 @@ export default function NewRequestPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Mock submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    router.push('/kiosk/requests');
+    try {
+        const { data: { user } } = await supabase.auth.getUser();
+        let inmateId;
 
-    // Real submission:
-    // const { error } = await supabase.from('requests').insert({
-    //     type, subject, description, inmate_id: '...' // handled by trigger or RLS inferring user
-    // });
+        if (user) {
+            const { data: inmate } = await supabase.from('inmates').select('id').eq('profile_id', user.id).single();
+            inmateId = inmate?.id;
+        }
+
+        if (!inmateId) {
+            const { data: demoInmate } = await supabase.from('inmates').select('id').limit(1).single();
+            if (demoInmate) inmateId = demoInmate.id;
+            else throw new Error("Could not find inmate profile to link request to.");
+        }
+
+        const { error } = await supabase.from('requests').insert({
+            type,
+            subject,
+            description,
+            inmate_id: inmateId,
+            status: 'pending'
+        });
+
+        if (error) throw error;
+        router.push('/kiosk/requests');
+    } catch (error: any) {
+        alert(`Failed to submit request: ${error.message}`);
+        console.error(error);
+    } finally {
+        setLoading(false);
+    }
   };
 
   return (

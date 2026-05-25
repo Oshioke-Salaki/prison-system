@@ -4,7 +4,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shield, Users, FileText, Calendar, LogOut } from 'lucide-react';
+import { Shield, Users, FileText, Calendar, LogOut, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
@@ -29,6 +29,7 @@ export default function OfficerLayout({ children }: { children: React.ReactNode 
     { icon: Users, label: 'Inmates', href: '/officer/inmates' },
     { icon: FileText, label: 'Requests', href: '/officer/requests' },
     { icon: Calendar, label: 'Visits', href: '/officer/visits' },
+    { icon: Settings, label: 'Settings', href: '/officer/settings' },
   ];
 
   return (
