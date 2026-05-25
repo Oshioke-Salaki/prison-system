@@ -9,7 +9,9 @@ import { Link } from 'next/link';
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
       totalInmates: 0,
+      totalRecords: 0,
       pendingRequests: 0,
+      activeIncidents: 0,
       revenue: 0,
       occupancy: { total: 0, occupied: 0, rate: 0 },
       statusCounts: { active: 0, solitary: 0, released: 0 }
@@ -21,12 +23,13 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
         // Parallel fetching
-        const [inmatesRes, requestsRes, transactionsRes, recentRequestsRes, cellsRes] = await Promise.all([
+        const [inmatesRes, requestsRes, transactionsRes, recentRequestsRes, cellsRes, incidentsRes] = await Promise.all([
             supabase.from('inmates').select('status'),
             supabase.from('requests').select('id', { count: 'exact' }).eq('status', 'pending'),
             supabase.from('transactions').select('amount').eq('type', 'purchase'), // Revenue approximation
             supabase.from('requests').select('id, subject, type, status, created_at, inmate:inmates (first_name, last_name)').order('created_at', { ascending: false }).limit(5),
-            supabase.from('cells').select('capacity, current_occupancy')
+            supabase.from('cells').select('capacity, current_occupancy'),
+            supabase.from('incidents').select('id', { count: 'exact' }).eq('status', 'reported')
         ]);
 
         const revenue = transactionsRes.data?.reduce((acc, curr) => acc + (Math.abs(curr.amount) || 0), 0) || 0;
@@ -36,15 +39,19 @@ export default function AdminDashboard() {
         const totalOccupancy = cellsRes.data?.reduce((acc, cell) => acc + cell.current_occupancy, 0) || 0;
         const occupancyRate = totalCapacity > 0 ? Math.round((totalOccupancy / totalCapacity) * 100) : 0;
 
-        // Calculate Inmate Status Stats
         const statusCounts = inmatesRes.data?.reduce((acc: any, curr: any) => {
             acc[curr.status] = (acc[curr.status] || 0) + 1;
             return acc;
         }, { active: 0, solitary: 0, released: 0 }) || {};
 
+        const totalRecords = inmatesRes.data?.length || 0;
+        const currentInmatesCount = (statusCounts.active || 0) + (statusCounts.solitary || 0);
+
         setStats({
-            totalInmates: inmatesRes.data?.length || 0,
+            totalInmates: currentInmatesCount,
+            totalRecords: totalRecords,
             pendingRequests: requestsRes.count || 0,
+            activeIncidents: incidentsRes.count || 0,
             revenue,
             occupancy: { total: totalCapacity, occupied: totalOccupancy, rate: occupancyRate },
             statusCounts
@@ -72,9 +79,11 @@ export default function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Total Inmates" value={stats.totalInmates.toString()} change="Registered" icon={Users} />
+          <StatCard title="Total Inmates" value={stats.totalInmates.toString()} change="Active & Solitary" icon={Users} />
           <StatCard title="Pending Requests" value={stats.pendingRequests.toString()} change="Needs Review" icon={FileText} alert={stats.pendingRequests > 0} />
-          <StatCard title="Incidents" value="0" change="Last 7 days" icon={AlertCircle} />
+          <Link href="/admin/incidents" className="block hover:translate-y-[-2px] transition-transform">
+            <StatCard title="Active Incidents" value={stats.activeIncidents.toString()} change="Unresolved" icon={AlertCircle} alert={stats.activeIncidents > 0} />
+          </Link>
           <StatCard title="Store Revenue" value={`₦${stats.revenue.toFixed(2)}`} change="Total Sales" icon={DollarSign} />
       </div>
 
@@ -139,7 +148,7 @@ export default function AdminDashboard() {
                               { label: 'Solitary', count: stats.statusCounts.solitary, color: 'bg-red-500', text: 'text-red-400' },
                               { label: 'Released', count: stats.statusCounts.released, color: 'bg-blue-500', text: 'text-blue-400' }
                           ].map(item => {
-                              const percentage = stats.totalInmates > 0 ? Math.round((item.count / stats.totalInmates) * 100) : 0;
+                              const percentage = stats.totalRecords > 0 ? Math.round((item.count / stats.totalRecords) * 100) : 0;
                               return (
                                   <div key={item.label}>
                                       <div className="flex justify-between items-end mb-2">

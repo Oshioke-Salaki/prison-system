@@ -98,6 +98,22 @@ function HeroSection() {
         </MotionDiv>
       </div>
 
+      {/* Dashboard Preview Mockup */}
+      <MotionDiv 
+        initial={{ opacity: 0, y: 100 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        className="mt-20 container mx-auto transform hover:scale-[1.01] transition-transform duration-500"
+      >
+        <div className="relative rounded-xl border border-white/10 bg-background overflow-hidden shadow-2xl shadow-primary/20 aspect-video flex items-center justify-center">
+            <img 
+                src="/dashboard-mockup.png" 
+                alt="Sentinell Dashboard Interface" 
+                className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity cursor-pointer"
+            />
+        </div>
+      </MotionDiv>
+
     </section>
   );
 }
@@ -144,7 +160,7 @@ function FeatureSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
               viewport={{ once: true }}
-              className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-colors group"
+              className="p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-primary/50 transition-colors group cursor-pointer"
             >
               <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
                 <feature.icon className="w-6 h-6 text-primary" />

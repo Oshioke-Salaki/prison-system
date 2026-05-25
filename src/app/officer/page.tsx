@@ -10,7 +10,8 @@ export default function OfficerDashboard() {
   const [stats, setStats] = useState({
       totalInmates: 0,
       pendingRequests: 0,
-      todayVisits: 0
+      todayVisits: 0,
+      activeIncidents: 0
   });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,20 +22,22 @@ export default function OfficerDashboard() {
         const today = new Date().toISOString().split('T')[0];
 
         // Parallel fetching
-        const [inmatesRes, requestsRes, visitsRes, recentRequestsRes] = await Promise.all([
+        const [inmatesRes, requestsRes, visitsRes, recentRequestsRes, incidentsRes] = await Promise.all([
             supabase.from('inmates').select('id', { count: 'exact' }),
             supabase.from('requests').select('id', { count: 'exact' }).eq('status', 'pending'),
             supabase.from('visits').select('id', { count: 'exact' }).eq('visit_date', today),
             supabase.from('requests')
                 .select('id, subject, type, status, created_at, inmate:inmates (first_name, last_name, inmate_number)')
                 .order('created_at', { ascending: false })
-                .limit(5)
+                .limit(5),
+            supabase.from('incidents').select('id', { count: 'exact' }).eq('status', 'reported')
         ]);
 
         setStats({
             totalInmates: inmatesRes.count || 0,
             pendingRequests: requestsRes.count || 0,
-            todayVisits: visitsRes.count || 0
+            todayVisits: visitsRes.count || 0,
+            activeIncidents: incidentsRes.count || 0
         });
 
         if (recentRequestsRes.data) {
@@ -54,7 +57,7 @@ export default function OfficerDashboard() {
         <p className="text-muted-foreground mt-2">Overview of facility status and assignments.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard 
             title="Total Inmates" 
             value={stats.totalInmates.toString()} 
@@ -79,6 +82,14 @@ export default function OfficerDashboard() {
             color="text-purple-500" 
             bgColor="bg-purple-500/10"
             link="/officer/visits"
+          />
+          <StatCard 
+            title="Active Incidents" 
+            value={stats.activeIncidents.toString()} 
+            icon={ShieldCheck} 
+            color="text-red-500" 
+            bgColor="bg-red-500/10"
+            alert={stats.activeIncidents > 0}
           />
       </div>
 
